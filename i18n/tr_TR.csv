@@ -1,0 +1,111 @@
+January,Ocak
+February,Şubat
+March,Mart
+April,Nisan
+May,Mayıs
+June,Haziran
+July,Temmuz
+August,Ağustos
+September,Eylül
+October,Ekim
+November,Kasım
+December,Aralık
+
+Sun,Paz
+Mon,Pzt
+Tue,Sal
+Wed,Çar
+Thu,Per
+Fri,Cum
+Sat,Cmt
+"Join This Event","Bu Etkinliğe Katıl"
+"Back to Events","Etkinliklere Geri Dön"
+"Event Calendar","Etkinlik Takvimi"
+"View Full Calendar","Tüm Takvimi Görüntüle"
+"View in Calendar","Takvimde Görüntüle"
+"Upcoming Events","Yaklaşan Etkinlikler"
+Events,Etkinlikler
+"No events scheduled for this day.","Bu gün için planlanmış etkinlik yok."
+"No upcoming events scheduled.","Yaklaşan planlanmış etkinlik yok."
+"Click for more details about this event.","Bu etkinlik hakkında daha fazla bilgi için tıklayın."
+"View Details","Detayları Görüntüle"
+"Event Details","Etkinlik Detayları"
+"Event Date:","Etkinlik Tarihi:"
+"Learn More","Daha Fazla Bilgi"
+"Events for","Etkinlikler:"
+"Selected Day","Seçilen Gün"
+Back,Geri
+"Delete Event","Etkinliği Sil"
+"Are you sure you want to delete this event?","Bu etkinliği silmek istediğinize emin misiniz?"
+Reset,Sıfırla
+"Save and Continue Edit","Kaydet ve Düzenlemeye Devam Et"
+"Save Event","Etkinliği Kaydet"
+"Important Conference","Önemli Konferans"
+"Lorem ipsum dolor sit amet consectetur","Lorem ipsum dolor sit amet consectetur"
+Workshop,Atölye
+"Afternoon Session","Öğleden Sonra Oturumu"
+"You deleted the event.","Etkinliği sildiniz."
+"We can't find an event to delete.","Silinecek bir etkinlik bulamıyoruz."
+"This event no longer exists.","Bu etkinlik artık mevcut değil."
+"Edit Event","Etkinliği Düzenle"
+"New Event","Yeni Etkinlik"
+"Manage Events","Etkinlikleri Yönet"
+"You saved the event.","Etkinliği kaydettiniz."
+"Something went wrong while saving the event.","Etkinliği kaydederken bir şeyler yanlış gitti."
+"Invalid form key. Please try again.","Geçersiz form anahtarı. Lütfen tekrar deneyin."
+"Invalid data. Please try again.","Geçersiz veri. Lütfen tekrar deneyin."
+"No event specified.","Hiçbir etkinlik belirtilmedi."
+"Event not found or registration not allowed.","Etkinlik bulunamadı veya kayıt yapılmasına izin verilmiyor."
+"Sorry, this event has reached its participation limit.","Üzgünüz, bu etkinlik katılım limitine ulaştı."
+"You have already registered for this event.","Bu etkinliğe zaten kaydoldunuz."
+"Thank you for registering for this event!","Bu etkinliğe kaydolduğunuz için teşekkür ederiz!"
+"Something went wrong while registering for the event.","Etkinliğe kaydolurken bir şeyler yanlış gitti."
+"Event not found or not active.","Etkinlik bulunamadı veya aktif değil."
+"Event Calendar - %1","Etkinlik Takvimi - %1"
+"Error processing image: %1","Görüntü işleme hatası: %1"
+Edit,Düzenle
+Delete,Sil
+"Delete ""${ $.$data.name }""","""${ $.$data.name }"" sil"
+"Are you sure you want to delete the event ""${ $.$data.name }""?","""${ $.$data.name }"" etkinliğini silmek istediğinize emin misiniz?"
+"View List","Listeyi Görüntüle"
+Paz,Paz
+Pzt,Pzt
+Sal,Sal
+Çar,Çar
+Per,Per
+Cum,Cum
+Cmt,Cmt
+Days,Günler
+Hours,Saatler
+Minutes,Dakikalar
+Seconds,Saniyeler
+"This event has already started!","Bu etkinlik zaten başladı!"
+"Event Photos","Etkinlik Fotoğrafları"
+"Registration is closed. The event has reached its participation limit.","Kayıt kapandı. Etkinlik katılım limitine ulaştı."
+Name,İsim
+Email,E-posta
+Phone,Telefon
+Register,Kayıt Ol
+"Event Mini Calendar","Etkinlik Mini Takvimi"
+"Displays a mini calendar with upcoming events.","Yaklaşan etkinliklerle birlikte mini bir takvim görüntüler."
+"Widget Title","Widget Başlığı"
+"Title displayed above the calendar","Takvimin üstünde görüntülenen başlık"
+Template,Şablon
+"Mini Calendar","Mini Takvim"
+"Event Information","Etkinlik Bilgisi"
+"Event Name","Etkinlik Adı"
+"Short Description","Kısa Açıklama"
+"Preview Image","Önizleme Görseli"
+"Event Date","Etkinlik Tarihi"
+"Publish Date","Yayın Tarihi"
+Category,Kategori
+Content,İçerik
+"Enable Join Form","Katılım Formunu Aktif Et"
+"Participation Limit","Katılım Limiti"
+"Leave empty for unlimited participants","Sınırsız katılımcı için boş bırakın"
+"Enable Countdown","Geri Sayımı Aktif Et"
+"Enable Event","Etkinliği Aktif Et"
+"Add New Event","Yeni Etkinlik Ekle"
+ID,ID
+Active,Aktif
+"Latest Events","En Son Etkinlikler"

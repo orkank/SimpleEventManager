@@ -1,0 +1,105 @@
+Back,Back
+"Delete Event","Delete Event"
+"Are you sure you want to delete this event?","Are you sure you want to delete this event?"
+Reset,Reset
+"Save and Continue Edit","Save and Continue Edit"
+"Save Event","Save Event"
+"Important Conference","Important Conference"
+"Lorem ipsum dolor sit amet consectetur","Lorem ipsum dolor sit amet consectetur"
+Workshop,Workshop
+"Afternoon Session","Afternoon Session"
+"You deleted the event.","You deleted the event."
+"We can't find an event to delete.","We can't find an event to delete."
+"This event no longer exists.","This event no longer exists."
+Events,Events
+"Edit Event","Edit Event"
+"New Event","New Event"
+"Manage Events","Manage Events"
+"You saved the event.","You saved the event."
+"Something went wrong while saving the event.","Something went wrong while saving the event."
+"Invalid form key. Please try again.","Invalid form key. Please try again."
+"Invalid data. Please try again.","Invalid data. Please try again."
+"No event specified.","No event specified."
+"Event not found or registration not allowed.","Event not found or registration not allowed."
+"Sorry, this event has reached its participation limit.","Sorry, this event has reached its participation limit."
+"You have already registered for this event.","You have already registered for this event."
+"Thank you for registering for this event!","Thank you for registering for this event!"
+"Something went wrong while registering for the event.","Something went wrong while registering for the event."
+"Event not found or not active.","Event not found or not active."
+"Event Calendar - %1","Event Calendar - %1"
+"Event Calendar","Event Calendar"
+"Error processing image: %1","Error processing image: %1"
+Edit,Edit
+Delete,Delete
+"Delete ""${ $.$data.name }""","Delete ""${ $.$data.name }"""
+"Are you sure you want to delete the event ""${ $.$data.name }""?","Are you sure you want to delete the event ""${ $.$data.name }""?"
+"View List","View List"
+Paz,Paz
+Pzt,Pzt
+Sal,Sal
+Çar,Çar
+Per,Per
+Cum,Cum
+Cmt,Cmt
+"Upcoming Events","Upcoming Events"
+"No events scheduled for this day.","No events scheduled for this day."
+"No upcoming events scheduled.","No upcoming events scheduled."
+"Click for more details about this event.","Click for more details about this event."
+"View Details","View Details"
+"Event Details","Event Details"
+January,January
+February,February
+March,March
+April,April
+May,May
+June,June
+July,July
+August,August
+September,September
+October,October
+November,November
+December,December
+Sun,Sun
+Mon,Mon
+Tue,Tue
+Wed,Wed
+Thu,Thu
+Fri,Fri
+Sat,Sat
+"Back to Events","Back to Events"
+"Event Date:","Event Date:"
+Days,Days
+Hours,Hours
+Minutes,Minutes
+Seconds,Seconds
+"This event has already started!","This event has already started!"
+"Event Photos","Event Photos"
+"Join This Event","Join This Event"
+"Registration is closed. The event has reached its participation limit.","Registration is closed. The event has reached its participation limit."
+Name,Name
+Email,Email
+Phone,Phone
+Register,Register
+"View Full Calendar","View Full Calendar"
+"Event Mini Calendar","Event Mini Calendar"
+"Displays a mini calendar with upcoming events.","Displays a mini calendar with upcoming events."
+"Widget Title","Widget Title"
+"Title displayed above the calendar","Title displayed above the calendar"
+Template,Template
+"Mini Calendar","Mini Calendar"
+"Event Information","Event Information"
+"Event Name","Event Name"
+"Short Description","Short Description"
+"Preview Image","Preview Image"
+"Event Date","Event Date"
+"Publish Date","Publish Date"
+Category,Category
+Content,Content
+"Enable Join Form","Enable Join Form"
+"Participation Limit","Participation Limit"
+"Leave empty for unlimited participants","Leave empty for unlimited participants"
+"Enable Countdown","Enable Countdown"
+"Enable Event","Enable Event"
+"Add New Event","Add New Event"
+ID,ID
+Active,Active

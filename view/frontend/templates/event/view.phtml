@@ -1,0 +1,337 @@
+<?php
+/**
+ * @var \IDangerous\SimpleEventManager\Block\Event\View $block
+ */
+$event = $block->getEvent();
+?>
+<div class="event-view">
+    <div class="event-view-header">
+        <!-- <div class="event-view-title">
+            <h1><?= $block->escapeHtml($event->getName()) ?></h1>
+            <?php if ($event->getCategory()): ?>
+                <div class="event-category">
+                    <?= $block->escapeHtml($event->getCategory()) ?>
+                </div>
+            <?php endif; ?>
+        </div> -->
+        <div class="event-view-actions">
+          <a href="<?= $block->escapeUrl($block->getUrl('events')) ?>" class="action back" style="display: flex; align-items: center; gap: 10px;">
+            <svg class="icon-arrow-left" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 19L8 12L15 5" stroke="#324473" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <?= $block->escapeHtml(__('Back to Events')) ?>
+          </a>
+        </div>
+    </div>
+
+    <div class="event-view-content-wrapper">
+        <div class="event-view-main-content">
+            <div class="event-details">
+                <div class="event-date">
+                    <strong><?= $block->escapeHtml(__('Event Date:')) ?></strong>
+                    <?= $block->escapeHtml($block->formatDate($event->getEventDate())) ?>
+                </div>
+
+                <?php if ($event->isCountdownEnabled()): ?>
+                    <div class="event-countdown">
+                        <div id="countdown" class="countdown">
+                            <div class="countdown-item">
+                                <span id="countdown-days">0</span>
+                                <span class="countdown-label"><?= $block->escapeHtml(__('Days')) ?></span>
+                            </div>
+                            <div class="countdown-item">
+                                <span id="countdown-hours">0</span>
+                                <span class="countdown-label"><?= $block->escapeHtml(__('Hours')) ?></span>
+                            </div>
+                            <div class="countdown-item">
+                                <span id="countdown-minutes">0</span>
+                                <span class="countdown-label"><?= $block->escapeHtml(__('Minutes')) ?></span>
+                            </div>
+                            <div class="countdown-item">
+                                <span id="countdown-seconds">0</span>
+                                <span class="countdown-label"><?= $block->escapeHtml(__('Seconds')) ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        require(['jquery'], function($) {
+                            $(document).ready(function() {
+                                const targetDate = new Date('<?= $block->escapeJs($block->getCountdownTargetDate()) ?>').getTime();
+
+                                function updateCountdown() {
+                                    const now = new Date().getTime();
+                                    const distance = targetDate - now;
+
+                                    if (distance < 0) {
+                                        $('#countdown').html('<div class="countdown-expired"><?= $block->escapeJs(__('This event has already started!')) ?></div>');
+                                        return;
+                                    }
+
+                                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                                    $('#countdown-days').text(days);
+                                    $('#countdown-hours').text(hours);
+                                    $('#countdown-minutes').text(minutes);
+                                    $('#countdown-seconds').text(seconds);
+                                }
+
+                                updateCountdown();
+                                setInterval(updateCountdown, 1000);
+                            });
+                        });
+                    </script>
+                <?php endif; ?>
+
+                <div class="event-content">
+                    <?= /* @noEscape */ $event->getContent() ?>
+                </div>
+
+                <?php $photos = $block->getEventPhotos(); ?>
+                <?php if (!empty($photos)): ?>
+                    <div class="event-photos">
+                        <h2><?= $block->escapeHtml(__('Event Photos')) ?></h2>
+                        <div class="photo-gallery">
+                            <?php foreach ($photos as $photoUrl): ?>
+                                <div class="photo-item">
+                                    <img src="<?= $block->escapeUrl($photoUrl) ?>" alt="<?= $block->escapeHtml($event->getName()) ?>" />
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($event->isJoinFormEnabled()): ?>
+                    <div class="event-registration">
+                        <h2><?= $block->escapeHtml(__('Join This Event')) ?></h2>
+
+                        <?php
+                        $registrationLimit = $event->getParticipationLimit();
+                        $registrationCount = 0; // In a real implementation, you would get the actual count
+                        $isLimitReached = $registrationLimit && $registrationCount >= $registrationLimit;
+                        ?>
+
+                        <?php if ($isLimitReached): ?>
+                            <div class="message info">
+                                <div><?= $block->escapeHtml(__('Registration is closed. The event has reached its participation limit.')) ?></div>
+                            </div>
+                        <?php else: ?>
+                            <form class="form event-registration-form"
+                                  action="<?= $block->escapeUrl($block->getUrl('events/event/register')) ?>"
+                                  method="post"
+                                  id="event-registration-form">
+                                <?= $block->getBlockHtml('formkey') ?>
+                                <input type="hidden" name="event_id" value="<?= $block->escapeHtmlAttr($event->getId()) ?>" />
+
+                                <div class="field required">
+                                    <label class="label" for="name"><span><?= $block->escapeHtml(__('Name')) ?></span></label>
+                                    <div class="control">
+                                        <input type="text" name="name" id="name" class="input-text" data-validate="{required:true}" />
+                                    </div>
+                                </div>
+
+                                <div class="field required">
+                                    <label class="label" for="email"><span><?= $block->escapeHtml(__('Email')) ?></span></label>
+                                    <div class="control">
+                                        <input type="email" name="email" id="email" class="input-text" data-validate="{required:true, 'validate-email':true}" />
+                                    </div>
+                                </div>
+
+                                <div class="field">
+                                    <label class="label" for="phone"><span><?= $block->escapeHtml(__('Phone')) ?></span></label>
+                                    <div class="control">
+                                        <input type="text" name="phone" id="phone" class="input-text" />
+                                    </div>
+                                </div>
+
+                                <div class="actions-toolbar">
+                                    <div class="primary">
+                                        <button type="submit" class="action submit primary">
+                                            <span><?= $block->escapeHtml(__('Register')) ?></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <script>
+                                require([
+                                    'jquery',
+                                    'mage/mage'
+                                ], function($) {
+                                    $('#event-registration-form').mage('validation');
+                                });
+                            </script>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="event-view-sidebar">
+            <div class="latest-events">
+                <h2 class="latest-events-title"><?= $block->escapeHtml(__('Latest Events')) ?></h2>
+                <?php
+                // Get latest events
+                $latestEvents = $block->getLatestEvents(5);
+                if (is_array($latestEvents) && count($latestEvents)):
+                ?>
+                    <div class="latest-events-list">
+                        <?php foreach ($latestEvents as $latestEvent): ?>
+                            <?php if ($latestEvent && $latestEvent->getId()): ?>
+                                <div class="latest-event-item">
+                                    <?php if ($latestEvent->getPreviewImage()): ?>
+                                        <div class="latest-event-image">
+                                            <a href="<?= $block->escapeUrl($block->getEventUrl($latestEvent)) ?>">
+                                                <img src="<?= $block->escapeUrl($latestEvent->getPreviewImageUrl()) ?>"
+                                                     alt="<?= $block->escapeHtml($latestEvent->getName()) ?>" />
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="latest-event-content">
+                                        <?php if ($latestEvent->getEventDate()): ?>
+                                            <div class="latest-event-date">
+                                                <?= $block->escapeHtml($block->formatDate($latestEvent->getEventDate())) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div class="latest-event-name">
+                                            <a href="<?= $block->escapeUrl($block->getEventUrl($latestEvent)) ?>">
+                                                <?= $block->escapeHtml($latestEvent->getName()) ?>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="message info empty">
+                        <div><?= $block->escapeHtml(__('No upcoming events scheduled.')) ?></div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.countdown {
+  display: inline-flex;
+  justify-content: center;
+  margin: 0;
+  gap: 15px;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #fff;
+  padding: 20px 10px;
+  margin-bottom: 20px;
+}
+.event-details {
+  background-color: #23386F;
+  color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+.event-details .event-date {
+  color: #fff;
+  margin-bottom: 20px;
+}
+.event-content {
+  margin-bottom: 0;
+  font-size: 18px;
+}
+.event-content p:last-child {
+  margin-bottom: 0;
+}
+.event-content * {
+  color: #fff !important;
+}
+.event-registration {
+  background-color: #fff;
+  color: #000;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+/* Two-column layout */
+.event-view-content-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.event-view-main-content {
+  flex: 1;
+  min-width: 280px;
+}
+
+.event-view-sidebar {
+  width: 330px;
+}
+
+.latest-events {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.latest-events-title {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #23386F;
+}
+
+.latest-event-item {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 15px;
+}
+
+.latest-event-item:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.latest-event-image {
+  margin-bottom: 10px;
+}
+
+.latest-event-image img {
+  width: 100%;
+  border-radius: 5px;
+  display: block;
+}
+
+.latest-event-date {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.latest-event-name {
+  font-weight: 600;
+}
+
+.latest-event-name a {
+  color: #23386F;
+  text-decoration: none;
+}
+
+.latest-event-name a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 767px) {
+  .event-view-content-wrapper {
+    flex-direction: column;
+  }
+
+  .event-view-sidebar {
+    width: 100%;
+  }
+}
+</style>

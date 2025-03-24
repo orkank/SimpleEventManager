@@ -1,0 +1,141 @@
+/* Event List Styles */
+.event-list {
+    margin-bottom: 30px;
+}
+.event-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.event-items {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.event-item {
+    display: flex;
+    border: 1px solid #e8e8e8;
+    border-radius: 5px;
+    padding: 15px;
+    transition: box-shadow 0.3s;
+}
+.event-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.event-date {
+    min-width: 150px;
+    font-weight: bold;
+    color: #555;
+}
+.event-info {
+    flex-grow: 1;
+}
+.event-name {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.event-category {
+    color: #666;
+    margin-bottom: 10px;
+}
+.event-actions {
+    margin-top: 10px;
+}
+
+/* Event View Styles */
+.event-view {
+    margin-bottom: 30px;
+}
+.event-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+.event-details {
+    margin-bottom: 30px;
+}
+.event-date {
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+.event-content {
+    margin-bottom: 30px;
+}
+
+/* Countdown Styles */
+.countdown {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 15px;
+}
+.countdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 70px;
+}
+.countdown-item span:first-child {
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+}
+.countdown-label {
+    font-size: 14px;
+    color: #666;
+}
+.countdown-expired {
+    font-size: 18px;
+    color: #e91e63;
+    font-weight: bold;
+}
+
+/* Photo Gallery Styles */
+.photo-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 15px;
+}
+.photo-item {
+    width: calc(33.333% - 10px);
+    border-radius: 5px;
+    overflow: hidden;
+}
+.photo-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Registration Form Styles */
+.event-registration {
+    margin-top: 30px;
+    padding: 20px;
+    border: 1px solid #e8e8e8;
+    border-radius: 5px;
+}
+.event-registration-form {
+    max-width: 500px;
+}
+
+/* Responsive Styles */
+@media (max-width: 767px) {
+    .event-view-header {
+        flex-direction: column;
+    }
+    .event-view-actions {
+        margin-top: 15px;
+    }
+    .photo-item {
+        width: calc(50% - 7.5px);
+    }
+    .event-item {
+        flex-direction: column;
+    }
+    .event-date {
+        margin-bottom: 10px;
+    }
+}

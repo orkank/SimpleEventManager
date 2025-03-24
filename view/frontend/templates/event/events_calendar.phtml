@@ -1,0 +1,443 @@
+<?php
+/**
+ * @var \IDangerous\SimpleEventManager\Block\EventCustomCalendar $block
+ */
+?>
+<div class="event-calendar-container">
+    <div class="event-calendar-header">
+      <div class="event-calendar-actions">
+        <!-- <a href="<?= $block->escapeUrl($block->getUrl('events')) ?>" class="action tocart primary action list">
+          <?= $block->escapeHtml(__('View List')) ?>
+        </a> -->
+      </div>
+    </div>
+
+    <div class="calendar-with-events mt-5">
+        <div class="calendar-column">
+            <div class="light">
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <span class="month-picker" id="month-picker">February</span>
+                        <div class="year-picker">
+                            <span class="year-change" id="prev-year">
+                                <span class="custom"><</span>
+                            </span>
+                            <span id="year">2021</span>
+                            <span class="year-change" id="next-year">
+                                <span class="custom">></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="calendar-body">
+                        <div class="calendar-week-day">
+                            <div><?= $block->escapeHtml(__('Paz')) ?></div>
+                            <div><?= $block->escapeHtml(__('Pzt')) ?></div>
+                            <div><?= $block->escapeHtml(__('Sal')) ?></div>
+                            <div><?= $block->escapeHtml(__('Çar')) ?></div>
+                            <div><?= $block->escapeHtml(__('Per')) ?></div>
+                            <div><?= $block->escapeHtml(__('Cum')) ?></div>
+                            <div><?= $block->escapeHtml(__('Cmt')) ?></div>
+                        </div>
+                        <div class="calendar-days"></div>
+                    </div>
+                    <div class="calendar-footer">
+                        <!-- Footer content if needed -->
+                    </div>
+                    <div class="month-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="events-column">
+            <div class="events-list-header">
+                <h2 id="events-list-title"><?= $block->escapeHtml(__('Upcoming Events')) ?></h2>
+                <div id="selected-date-subtitle" class="selected-date-subtitle"></div>
+            </div>
+            <div id="events-list-container" class="events-list-container">
+                <!-- Events will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Translation strings
+    const translations = {
+        upcomingEvents: '<?= $block->escapeJs(__('Upcoming Events')) ?>',
+        events: '<?= $block->escapeJs(__('Events')) ?>',
+        noEventsForDay: '<?= $block->escapeJs(__('No events scheduled for this day.')) ?>',
+        noUpcomingEvents: '<?= $block->escapeJs(__('No upcoming events scheduled.')) ?>',
+        defaultDescription: '<?= $block->escapeJs(__('Click for more details about this event.')) ?>',
+        viewDetails: '<?= $block->escapeJs(__('View Details')) ?>',
+        eventDetails: '<?= $block->escapeJs(__('Event Details')) ?>',
+        monthNames: [
+            '<?= $block->escapeJs(__('January')) ?>',
+            '<?= $block->escapeJs(__('February')) ?>',
+            '<?= $block->escapeJs(__('March')) ?>',
+            '<?= $block->escapeJs(__('April')) ?>',
+            '<?= $block->escapeJs(__('May')) ?>',
+            '<?= $block->escapeJs(__('June')) ?>',
+            '<?= $block->escapeJs(__('July')) ?>',
+            '<?= $block->escapeJs(__('August')) ?>',
+            '<?= $block->escapeJs(__('September')) ?>',
+            '<?= $block->escapeJs(__('October')) ?>',
+            '<?= $block->escapeJs(__('November')) ?>',
+            '<?= $block->escapeJs(__('December')) ?>'
+        ],
+        dayNames: [
+            '<?= $block->escapeJs(__('Sun')) ?>',
+            '<?= $block->escapeJs(__('Mon')) ?>',
+            '<?= $block->escapeJs(__('Tue')) ?>',
+            '<?= $block->escapeJs(__('Wed')) ?>',
+            '<?= $block->escapeJs(__('Thu')) ?>',
+            '<?= $block->escapeJs(__('Fri')) ?>',
+            '<?= $block->escapeJs(__('Sat')) ?>'
+        ]
+    };
+
+    let calendar = document.querySelector('.calendar');
+    let eventsListContainer = document.getElementById('events-list-container');
+    let eventsListTitle = document.getElementById('events-list-title');
+    let selectedDateSubtitle = document.getElementById('selected-date-subtitle');
+    let selectedDate = null;
+
+    // Get events data from PHP block
+    const eventsData = <?= /* @noEscape */ $block->getEventsForCalendar() ?>;
+
+    // Create events map by date for easy lookup
+    const eventsByDate = {};
+    const allEvents = [...eventsData]; // Clone array for "all events" list
+
+    // Sort events by date (newest first)
+    allEvents.sort((a, b) => {
+        const dateA = new Date(a.date);
+        const dateB = new Date(b.date);
+        return dateA - dateB; // Ascending order - upcoming events first
+    });
+
+    // Group events by date
+    eventsData.forEach(event => {
+        if (!eventsByDate[event.date]) {
+            eventsByDate[event.date] = [];
+        }
+        eventsByDate[event.date].push(event);
+    });
+
+    const month_names = translations.monthNames;
+
+    // Function to display events in the right column
+    function displayEvents(events, selectedDate = null) {
+        eventsListContainer.innerHTML = '';
+
+        // If a specific date is selected, update the title
+        if (selectedDate) {
+            const dateParts = selectedDate.split('-');
+            const year = dateParts[0];
+            const month = parseInt(dateParts[1]) - 1;
+            const day = parseInt(dateParts[2]);
+
+            eventsListTitle.textContent = translations.events;
+            selectedDateSubtitle.textContent = `${month_names[month]} ${day}`;
+        } else {
+            eventsListTitle.textContent = translations.upcomingEvents;
+            selectedDateSubtitle.textContent = '';
+        }
+
+        // Deduplicate events based on id, date, and name combination
+        const uniqueEvents = [];
+        const seenEvents = new Set();
+
+        if (events && events.length > 0) {
+            events.forEach(event => {
+                // Create a unique key for each event
+                const eventKey = `${event.id}-${event.date}-${event.name}-${event.start_time}`;
+
+                // Only add the event if we haven't seen it before
+                if (!seenEvents.has(eventKey)) {
+                    seenEvents.add(eventKey);
+                    uniqueEvents.push(event);
+                }
+            });
+        }
+
+        // If no events to display after deduplication
+        if (uniqueEvents.length === 0) {
+            const noEventsMsg = document.createElement('div');
+            noEventsMsg.className = 'no-events-message';
+            noEventsMsg.textContent = selectedDate
+                ? translations.noEventsForDay
+                : translations.noUpcomingEvents;
+            eventsListContainer.appendChild(noEventsMsg);
+            return;
+        }
+
+        // Group events by date
+        const eventsByDateGroup = {};
+        uniqueEvents.forEach(event => {
+            if (!eventsByDateGroup[event.date]) {
+                eventsByDateGroup[event.date] = [];
+            }
+            eventsByDateGroup[event.date].push(event);
+        });
+
+        // Display events grouped by date
+        Object.keys(eventsByDateGroup).forEach(date => {
+            // Only show date header if we're displaying all events (not a single day)
+            if (!selectedDate) {
+                const dateHeader = document.createElement('div');
+                dateHeader.className = 'event-date-header';
+
+                const dateParts = date.split('-');
+                const year = dateParts[0];
+                const month = parseInt(dateParts[1]) - 1;
+                const day = parseInt(dateParts[2]);
+
+                dateHeader.innerHTML = `<div class="event-date-title">${month_names[month]} ${day}</div>`;
+                eventsListContainer.appendChild(dateHeader);
+            }
+
+            // Add all events for this date
+            eventsByDateGroup[date].forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'event-item';
+
+                // Extract time if available (assuming format like "08:00:00" or similar)
+                let startTime = '';
+                let endTime = '';
+
+                if (event.start_time) {
+                    startTime = event.start_time.substring(0, 5);
+                }
+
+                if (event.end_time) {
+                    endTime = event.end_time.substring(0, 5);
+                }
+
+                const timeDisplay = (startTime && endTime)
+                    ? `<div class="event-time">${startTime} - ${endTime}</div>`
+                    : '';
+
+                eventElement.innerHTML = `
+                    <div class="event-content">
+                        <div class="event-time-column">
+                            ${timeDisplay}
+                        </div>
+                        <div class="event-details">
+                            <div class="event-title"><a href="${event.url}">${event.name}</a></div>
+                            <div class="event-description">${event.description || translations.defaultDescription}</div>
+                        </div>
+                    </div>
+                `;
+
+                eventsListContainer.appendChild(eventElement);
+            });
+        });
+    }
+
+    // Initialize with latest events (limit 10)
+    displayEvents(allEvents.slice(0, 10));
+
+    isLeapYear = (year) => {
+        return (year % 4 === 0 && year % 100 !== 0 && year % 400 !== 0) || (year % 100 === 0 && year % 400 === 0);
+    }
+
+    getFebDays = (year) => {
+        return isLeapYear(year) ? 29 : 28;
+    }
+
+    generateCalendar = (month, year) => {
+        let calendar_days = calendar.querySelector('.calendar-days');
+        let calendar_header_year = calendar.querySelector('#year');
+
+        let days_of_month = [31, getFebDays(year), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        calendar_days.innerHTML = '';
+
+        let currDate = new Date();
+        if (!month && month !== 0) month = currDate.getMonth();
+        if (!year) year = currDate.getFullYear();
+
+        let curr_month = `${month_names[month]}`;
+        month_picker.innerHTML = curr_month;
+        calendar_header_year.innerHTML = year;
+
+        let first_day = new Date(year, month, 1);
+
+        for (let i = 0; i <= days_of_month[month] + first_day.getDay() - 1; i++) {
+            let day = document.createElement('div');
+            if (i >= first_day.getDay()) {
+                const dayNumber = i - first_day.getDay() + 1;
+                const dateStr = formatDateStr(year, month, dayNumber);
+
+                day.classList.add('calendar-day-hover');
+                day.dataset.date = dateStr; // Store date in dataset for easy access
+                day.innerHTML = dayNumber;
+                day.innerHTML += `<span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>`;
+
+                // Check if this day has events
+                if (eventsByDate[dateStr] && eventsByDate[dateStr].length > 0) {
+                    day.classList.add('event-date', 'underline-3', 'style-1');
+
+                    // Create popup for events on this day
+                    const eventsPopup = document.createElement('div');
+                    eventsPopup.className = 'event-popup';
+
+                    let popupContent = '';
+                    eventsByDate[dateStr].forEach(event => {
+                        popupContent += `
+                            <div class="event-popup-item">
+                                <div class="event-popup-title">
+                                    <a href="${event.url}">${event.name}</a>
+                                </div>
+                                <div class="event-popup-date">
+                                    <i class="calendar-icon"></i>
+                                    <span>${dateStr.replace(/-/g, '/')}</span>
+                                </div>
+                            </div>
+                        `;
+                        if (eventsByDate[dateStr].length > 1) {
+                            popupContent += '<hr style="margin: 8px 0; border-top: 1px solid #eee;">';
+                        }
+                    });
+
+                    eventsPopup.innerHTML = popupContent;
+                    day.appendChild(eventsPopup);
+                }
+
+                // Add click event to show events for this day
+                day.addEventListener('click', function(e) {
+                    // Remove selected class from all days
+                    document.querySelectorAll('.calendar-days div').forEach(d => {
+                        d.classList.remove('selected-day');
+                    });
+
+                    // Add selected class to this day
+                    this.classList.add('selected-day');
+
+                    // Get date from dataset
+                    const clickedDate = this.dataset.date;
+
+                    // Display events for this date
+                    const dayEvents = eventsByDate[clickedDate] || [];
+                    displayEvents(dayEvents, clickedDate);
+                });
+
+                if (dayNumber === currDate.getDate() && year === currDate.getFullYear() && month === currDate.getMonth()) {
+                    day.classList.add('curr-date');
+                }
+            }
+            calendar_days.appendChild(day);
+        }
+    }
+
+    // Format date as YYYY-MM-DD for event matching
+    function formatDateStr(year, month, day) {
+        month = month + 1; // JavaScript months are 0-based
+        return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
+    }
+
+    let month_list = calendar.querySelector('.month-list');
+
+    month_names.forEach((e, index) => {
+        let month = document.createElement('div');
+        month.innerHTML = `<div data-month="${index}">${e}</div>`;
+        month.querySelector('div').onclick = () => {
+            month_list.classList.remove('show');
+            curr_month.value = index;
+            generateCalendar(index, curr_year.value);
+
+            // Reset event list to show upcoming events
+            displayEvents(allEvents.slice(0, 10));
+
+            // Remove selected day classes
+            document.querySelectorAll('.calendar-days div').forEach(d => {
+                d.classList.remove('selected-day');
+            });
+        }
+        month_list.appendChild(month);
+    });
+
+    let month_picker = calendar.querySelector('#month-picker');
+
+    month_picker.onclick = () => {
+        month_list.classList.add('show');
+    }
+
+    let currDate = new Date();
+
+    let curr_month = {value: currDate.getMonth()};
+    let curr_year = {value: currDate.getFullYear()};
+
+    // Check if there's a selected date from URL
+    <?php
+    $selectedDateComponents = $block->getSelectedDateComponents();
+    if ($selectedDateComponents['year'] && $selectedDateComponents['month'] !== null && $selectedDateComponents['day']):
+    ?>
+    // Use selected date from URL
+    curr_year.value = <?= (int)$selectedDateComponents['year'] ?>;
+    curr_month.value = <?= (int)$selectedDateComponents['month'] ?>;
+
+    // Generate calendar with selected date
+    generateCalendar(curr_month.value, curr_year.value);
+
+    // Find and highlight the selected day
+    setTimeout(function() {
+        const selectedDayNumber = <?= (int)$selectedDateComponents['day'] ?>;
+        const formattedSelectedDate = formatDateStr(curr_year.value, curr_month.value, selectedDayNumber);
+
+        // Find the day element
+        const dayElements = document.querySelectorAll('.calendar-days div[data-date="' + formattedSelectedDate + '"]');
+        if (dayElements.length > 0) {
+            // Remove selected class from all days
+            document.querySelectorAll('.calendar-days div').forEach(d => {
+                d.classList.remove('selected-day');
+            });
+
+            // Add selected class to this day and trigger click event
+            const dayElement = dayElements[0];
+            dayElement.classList.add('selected-day');
+
+            // Display events for this date
+            const selectedDateEvents = eventsByDate[formattedSelectedDate] || [];
+            displayEvents(selectedDateEvents, formattedSelectedDate);
+        }
+    }, 100); // Small delay to ensure calendar is rendered
+    <?php else: ?>
+    // Use current date
+    generateCalendar(curr_month.value, curr_year.value);
+
+    // Initialize with latest events (limit 10)
+    displayEvents(allEvents.slice(0, 10));
+    <?php endif; ?>
+
+    document.querySelector('#prev-year').onclick = () => {
+        --curr_year.value;
+        generateCalendar(curr_month.value, curr_year.value);
+
+        // Reset event list to show upcoming events
+        displayEvents(allEvents.slice(0, 10));
+
+        // Remove selected day classes
+        document.querySelectorAll('.calendar-days div').forEach(d => {
+            d.classList.remove('selected-day');
+        });
+    }
+
+    document.querySelector('#next-year').onclick = () => {
+        ++curr_year.value;
+        generateCalendar(curr_month.value, curr_year.value);
+
+        // Reset event list to show upcoming events
+        displayEvents(allEvents.slice(0, 10));
+
+        // Remove selected day classes
+        document.querySelectorAll('.calendar-days div').forEach(d => {
+            d.classList.remove('selected-day');
+        });
+    }
+});
+</script>

@@ -1,0 +1,293 @@
+<?php
+/**
+ * @var \IDangerous\SimpleEventManager\Block\Widget\MiniCalendar $block
+ */
+
+// Get view URL for CSS files
+$viewFileUrl = $block->getViewFileUrl('IDangerous_SimpleEventManager::css/');
+?>
+
+<!-- Import required CSS files -->
+<link rel="stylesheet" type="text/css" href="<?= $block->escapeUrl($viewFileUrl . '/custom-calendar.css') ?>">
+
+<div class="event-mini-calendar-container">
+    <?php if (!empty($block->getWidgetTitle())): ?>
+    <div class="event-mini-calendar-header">
+        <h2 class="event-mini-calendar-title"><?= $block->escapeHtml($block->getWidgetTitle()) ?></h2>
+    </div>
+    <?php endif; ?>
+
+    <div class="mini-calendar-wrapper">
+        <div class="calendar-only-column">
+            <div class="light">
+                <div class="calendar">
+                    <div class="calendar-header">
+                        <span class="month-picker" id="mini-month-picker">February</span>
+                        <div class="year-picker">
+                            <span class="year-change" id="mini-prev-year">
+                                <span class="custom"><</span>
+                            </span>
+                            <span id="mini-year">2021</span>
+                            <span class="year-change" id="mini-next-year">
+                                <span class="custom">></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="calendar-body">
+                        <div class="calendar-week-day">
+                            <div><?= $block->escapeHtml(__('Sun')) ?></div>
+                            <div><?= $block->escapeHtml(__('Mon')) ?></div>
+                            <div><?= $block->escapeHtml(__('Tue')) ?></div>
+                            <div><?= $block->escapeHtml(__('Wed')) ?></div>
+                            <div><?= $block->escapeHtml(__('Thu')) ?></div>
+                            <div><?= $block->escapeHtml(__('Fri')) ?></div>
+                            <div><?= $block->escapeHtml(__('Sat')) ?></div>
+                        </div>
+                        <div class="calendar-days"></div>
+                    </div>
+                    <div class="calendar-footer">
+                        <a href="<?= $block->escapeUrl($block->getCalendarPageUrl()) ?>" class="action primary">
+                            <span><?= $block->escapeHtml(__('View Full Calendar')) ?></span>
+                        </a>
+                    </div>
+                    <div class="month-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate unique ID for this calendar instance
+    const calendarId = 'calendar-' + Math.random().toString(36).substr(2, 9);
+    document.querySelector('.calendar').setAttribute('id', calendarId);
+
+    // Translation strings
+    const translations = {
+      monthNames: [
+            '<?= $block->escapeJs(__('January')) ?>',
+            '<?= $block->escapeJs(__('February')) ?>',
+            '<?= $block->escapeJs(__('March')) ?>',
+            '<?= $block->escapeJs(__('April')) ?>',
+            '<?= $block->escapeJs(__('May')) ?>',
+            '<?= $block->escapeJs(__('June')) ?>',
+            '<?= $block->escapeJs(__('July')) ?>',
+            '<?= $block->escapeJs(__('August')) ?>',
+            '<?= $block->escapeJs(__('September')) ?>',
+            '<?= $block->escapeJs(__('October')) ?>',
+            '<?= $block->escapeJs(__('November')) ?>',
+            '<?= $block->escapeJs(__('December')) ?>'
+        ],
+        dayNames: [
+            '<?= $block->escapeJs(__('Sun')) ?>',
+            '<?= $block->escapeJs(__('Mon')) ?>',
+            '<?= $block->escapeJs(__('Tue')) ?>',
+            '<?= $block->escapeJs(__('Wed')) ?>',
+            '<?= $block->escapeJs(__('Thu')) ?>',
+            '<?= $block->escapeJs(__('Fri')) ?>',
+            '<?= $block->escapeJs(__('Sat')) ?>'
+        ]
+
+    };
+
+    let miniCalendar = document.querySelector('#' + calendarId);
+
+    // Get events data from PHP block
+    const eventsData = <?= /* @noEscape */ $block->getEventsForCalendar() ?>;
+
+    // Create events map by date for easy lookup
+    const eventsByDate = {};
+
+    // Group events by date
+    eventsData.forEach(event => {
+        if (!eventsByDate[event.date]) {
+            eventsByDate[event.date] = [];
+        }
+        eventsByDate[event.date].push(event);
+    });
+
+    const month_names = translations.monthNames;
+
+    isLeapYear = (year) => {
+        return (year % 4 === 0 && year % 100 !== 0 && year % 400 !== 0) || (year % 100 === 0 && year % 400 === 0);
+    }
+
+    getFebDays = (year) => {
+        return isLeapYear(year) ? 29 : 28;
+    }
+
+    generateCalendar = (month, year) => {
+        let calendar_days = miniCalendar.querySelector('.calendar-days');
+        let calendar_header_year = miniCalendar.querySelector('#mini-year');
+
+        let days_of_month = [31, getFebDays(year), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        calendar_days.innerHTML = '';
+
+        let currDate = new Date();
+        if (!month && month !== 0) month = currDate.getMonth();
+        if (!year) year = currDate.getFullYear();
+
+        let curr_month = `${month_names[month]}`;
+        miniCalendar.querySelector('#mini-month-picker').innerHTML = curr_month;
+        calendar_header_year.innerHTML = year;
+
+        let first_day = new Date(year, month, 1);
+
+        for (let i = 0; i <= days_of_month[month] + first_day.getDay() - 1; i++) {
+            let day = document.createElement('div');
+            if (i >= first_day.getDay()) {
+                const dayNumber = i - first_day.getDay() + 1;
+                const dateStr = formatDateStr(year, month, dayNumber);
+
+                day.classList.add('calendar-day-hover');
+                day.dataset.date = dateStr; // Store date in dataset for easy access
+                day.innerHTML = dayNumber;
+                day.innerHTML += `<span></span>
+                                <span></span>
+                                <span></span>
+                                <span></span>`;
+
+                // Check if this day has events
+                if (eventsByDate[dateStr] && eventsByDate[dateStr].length > 0) {
+                    day.classList.add('event-date', 'underline-3', 'style-1');
+
+                    // Create popup for events on this day
+                    const eventsPopup = document.createElement('div');
+                    eventsPopup.className = 'event-popup';
+
+                    let popupContent = '';
+                    eventsByDate[dateStr].forEach(event => {
+                        popupContent += `
+                            <div class="event-popup-item">
+                                <div class="event-popup-title">
+                                    <a href="${event.url}">${event.name}</a>
+                                </div>
+                                <div class="event-popup-date">
+                                    <i class="calendar-icon"></i>
+                                    <span>${dateStr.replace(/-/g, '/')}</span>
+                                </div>
+                            </div>
+                        `;
+                        if (eventsByDate[dateStr].length > 1) {
+                            popupContent += '<hr style="margin: 8px 0; border-top: 1px solid #eee;">';
+                        }
+                    });
+
+                    eventsPopup.innerHTML = popupContent;
+                    day.appendChild(eventsPopup);
+                }
+
+                // Add click event to navigate to calendar page with this date
+                day.addEventListener('click', function(e) {
+                    const clickedDate = this.dataset.date;
+                    window.location.href = '<?= $block->escapeJs($block->getCalendarPageUrl()) ?>' + clickedDate;
+                });
+
+                if (dayNumber === currDate.getDate() && year === currDate.getFullYear() && month === currDate.getMonth()) {
+                    day.classList.add('curr-date');
+                }
+            }
+            calendar_days.appendChild(day);
+        }
+    }
+
+    // Format date as YYYY-MM-DD for event matching
+    function formatDateStr(year, month, day) {
+        month = month + 1; // JavaScript months are 0-based
+        return `${year}-${month < 10 ? '0' + month : month}-${day < 10 ? '0' + day : day}`;
+    }
+
+    let month_list = miniCalendar.querySelector('.month-list');
+    month_list.innerHTML = '';  // Clear any existing content
+
+    month_names.forEach((e, index) => {
+        let month = document.createElement('div');
+        month.innerHTML = `<div data-month="${index}">${e}</div>`;
+        month.querySelector('div').onclick = () => {
+            month_list.classList.remove('show');
+            mini_curr_month.value = index;
+            generateCalendar(index, mini_curr_year.value);
+        }
+        month_list.appendChild(month);
+    });
+
+    let month_picker = miniCalendar.querySelector('#mini-month-picker');
+
+    month_picker.onclick = () => {
+        month_list.classList.add('show');
+    }
+
+    let currDate = new Date();
+
+    let mini_curr_month = {value: currDate.getMonth()};
+    let mini_curr_year = {value: currDate.getFullYear()};
+
+    // Check if there's a selected date from URL
+    <?php
+    $selectedDateComponents = $block->getSelectedDateComponents();
+    if ($selectedDateComponents['year'] && $selectedDateComponents['month'] !== null && $selectedDateComponents['day']):
+    ?>
+    // Use selected date from URL
+    mini_curr_year.value = <?= (int)$selectedDateComponents['year'] ?>;
+    mini_curr_month.value = <?= (int)$selectedDateComponents['month'] ?>;
+    <?php endif; ?>
+
+    // Generate calendar with selected or current date
+    generateCalendar(mini_curr_month.value, mini_curr_year.value);
+
+    miniCalendar.querySelector('#mini-prev-year').onclick = () => {
+        --mini_curr_year.value;
+        generateCalendar(mini_curr_month.value, mini_curr_year.value);
+    }
+
+    miniCalendar.querySelector('#mini-next-year').onclick = () => {
+        ++mini_curr_year.value;
+        generateCalendar(mini_curr_month.value, mini_curr_year.value);
+    }
+});
+</script>
+
+<style>
+.event-mini-calendar-container {
+    margin-bottom: 30px;
+}
+.event-mini-calendar-header {
+    margin-bottom: 15px;
+    text-align: center;
+}
+.event-mini-calendar-title {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.mini-calendar-wrapper .calendar {
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
+}
+.mini-calendar-wrapper .calendar-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+.mini-calendar-wrapper .calendar-days div:hover {
+    cursor: pointer;
+}
+.mini-calendar-wrapper .event-popup {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    padding: 10px;
+    z-index: 10;
+    display: none;
+}
+.mini-calendar-wrapper .calendar-days div:hover .event-popup {
+    display: block;
+}
+</style>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widgets xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Widget:etc/widget.xsd">
+    <widget id="idangerous_minicalendar" class="IDangerous\SimpleEventManager\Block\Widget\MiniCalendar" placeholder_image="IDangerous_SimpleEventManager::images/calendar_widget_placeholder.png">
+        <label translate="true">Event Mini Calendar</label>
+        <description translate="true">Displays a mini calendar with upcoming events.</description>
+        <parameters>
+            <parameter name="title" xsi:type="text" visible="true" sort_order="10">
+                <label translate="true">Widget Title</label>
+                <description translate="true">Title displayed above the calendar</description>
+                <value>Upcoming Events</value>
+            </parameter>
+            <parameter name="template" xsi:type="select" visible="true" required="true" sort_order="20">
+                <label translate="true">Template</label>
+                <options>
+                    <option name="default" value="IDangerous_SimpleEventManager::widget/mini_calendar.phtml" selected="true">
+                        <label translate="true">Mini Calendar</label>
+                    </option>
+                </options>
+            </parameter>
+        </parameters>
+    </widget>
+</widgets>

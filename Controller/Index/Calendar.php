@@ -1,0 +1,83 @@
+<?php
+/**
+ * Copyright © IDangerous All rights reserved.
+ * See COPYING.txt for license details.
+ */
+namespace IDangerous\SimpleEventManager\Controller\Index;
+
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\App\Action\Context;
+use Magento\Framework\View\Result\PageFactory;
+use Magento\Framework\Registry;
+
+class Calendar extends Action
+{
+    /**
+     * @var PageFactory
+     */
+    protected $resultPageFactory;
+
+    /**
+     * @var Registry
+     */
+    protected $registry;
+
+    /**
+     * @param Context $context
+     * @param PageFactory $resultPageFactory
+     * @param Registry $registry
+     */
+    public function __construct(
+        Context $context,
+        PageFactory $resultPageFactory,
+        Registry $registry
+    ) {
+        $this->resultPageFactory = $resultPageFactory;
+        $this->registry = $registry;
+        parent::__construct($context);
+    }
+
+    /**
+     * Event calendar page
+     *
+     * @return \Magento\Framework\View\Result\Page
+     */
+    public function execute()
+    {
+        // First check for date in URL path: /events/index/calendar/2025-03-20
+        $urlPathDate = null;
+        $request = $this->getRequest();
+        $pathInfo = trim($request->getPathInfo(), '/');
+        $pathParts = explode('/', $pathInfo);
+
+        // If we have a date in the URL path (format: /events/index/calendar/YYYY-MM-DD)
+        if (count($pathParts) > 3 && isset($pathParts[3])) {
+            $urlPathDate = $pathParts[3];
+        }
+
+        // Then check query params (for backward compatibility)
+        $queryDate = $request->getParam('date');
+
+        // Use URL path date if available, otherwise use query param
+        $date = $urlPathDate ?: $queryDate;
+
+        // Validate date format (YYYY-MM-DD)
+        if ($date && preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            // Register the selected date for use in blocks
+            $this->registry->register('selected_calendar_date', $date);
+
+            // Set page title with the selected date
+            $formattedDate = date('F j, Y', strtotime($date));
+            $pageTitle = __('Event Calendar - %1', $formattedDate);
+        } else {
+            // Default title if no date is selected
+            $pageTitle = __('Event Calendar');
+        }
+
+        /** @var \Magento\Framework\View\Result\Page $resultPage */
+        $resultPage = $this->resultPageFactory->create();
+        $resultPage->getConfig()->getTitle()->set($pageTitle);
+
+        return $resultPage;
+    }
+}
