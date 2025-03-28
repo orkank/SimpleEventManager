@@ -48,6 +48,7 @@ class EventActions extends Column
         if (isset($dataSource['data']['items'])) {
             foreach ($dataSource['data']['items'] as & $item) {
                 if (isset($item['event_id'])) {
+                    $name = $item['name'] ?? __('Event');
                     $item[$this->getData('name')] = [
                         'edit' => [
                             'href' => $this->urlBuilder->getUrl(
@@ -63,8 +64,8 @@ class EventActions extends Column
                             ),
                             'label' => __('Delete'),
                             'confirm' => [
-                                'title' => __('Delete "${ $.$data.name }"'),
-                                'message' => __('Are you sure you want to delete the event "${ $.$data.name }"?')
+                                'title' => __('Delete Event'),
+                                'message' => __('Are you sure you want to delete the event "%1"?', $name)
                             ]
                         ]
                     ];

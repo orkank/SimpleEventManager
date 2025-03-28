@@ -14,7 +14,7 @@ class SaveButton extends GenericButton implements ButtonProviderInterface
      */
     public function getButtonData()
     {
-        return [
+        $data = [
             'label' => __('Save Event'),
             'class' => 'save primary',
             'data_attribute' => [
@@ -34,5 +34,7 @@ class SaveButton extends GenericButton implements ButtonProviderInterface
             ],
             'sort_order' => 40,
         ];
+
+        return $data;
     }
 }

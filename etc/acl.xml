@@ -6,6 +6,14 @@
                 <resource id="Magento_Backend::content">
                     <resource id="IDangerous_SimpleEventManager::events" title="Events" translate="title" sortOrder="50">
                         <resource id="IDangerous_SimpleEventManager::event" title="Manage Events" translate="title" sortOrder="10"/>
+                        <resource id="IDangerous_SimpleEventManager::config" title="Configuration" translate="title" sortOrder="20"/>
+                    </resource>
+                </resource>
+                <resource id="Magento_Backend::stores">
+                    <resource id="Magento_Backend::stores_settings">
+                        <resource id="Magento_Config::config">
+                            <resource id="IDangerous_SimpleEventManager::system_config" title="Simple Event Manager Configuration" translate="title" />
+                        </resource>
                     </resource>
                 </resource>
             </resource>

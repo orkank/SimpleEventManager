@@ -9,6 +9,8 @@ use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\Registry;
+use IDangerous\SimpleEventManager\Helper\Config;
+use Magento\Framework\Controller\Result\RedirectFactory;
 
 class Calendar extends Action
 {
@@ -23,27 +25,49 @@ class Calendar extends Action
     protected $registry;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
+     * @var RedirectFactory
+     */
+    protected $resultRedirectFactory;
+
+    /**
      * @param Context $context
      * @param PageFactory $resultPageFactory
      * @param Registry $registry
+     * @param Config $config
      */
     public function __construct(
         Context $context,
         PageFactory $resultPageFactory,
-        Registry $registry
+        Registry $registry,
+        Config $config
     ) {
         $this->resultPageFactory = $resultPageFactory;
         $this->registry = $registry;
+        $this->config = $config;
+        $this->resultRedirectFactory = $context->getResultRedirectFactory();
         parent::__construct($context);
     }
 
     /**
      * Event calendar page
      *
-     * @return \Magento\Framework\View\Result\Page
+     * @return \Magento\Framework\View\Result\Page|\Magento\Framework\Controller\Result\Redirect
      */
     public function execute()
     {
+        // Check if module and calendar feature are enabled
+        if (!$this->config->isEnabled() || !$this->config->isCalendarEnabled()) {
+            // Redirect to events index page
+            $resultRedirect = $this->resultRedirectFactory->create();
+            $indexUrl = $this->config->getIndexSlug() ?: 'events';
+            return $resultRedirect->setPath($indexUrl);
+        }
+
         // First check for date in URL path: /events/index/calendar/2025-03-20
         $urlPathDate = null;
         $request = $this->getRequest();

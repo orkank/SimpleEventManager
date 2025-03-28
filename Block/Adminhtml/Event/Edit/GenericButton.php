@@ -41,7 +41,14 @@ class GenericButton
     public function getEventId()
     {
         try {
+            // Try to get ID from 'id' parameter first (UI component standard)
             $id = $this->context->getRequest()->getParam('id');
+
+            // If not found, check for 'event_id' parameter
+            if (!$id) {
+                $id = $this->context->getRequest()->getParam('event_id');
+            }
+
             if ($id) {
                 $event = $this->eventFactory->create()->load($id);
                 if ($event->getId()) {

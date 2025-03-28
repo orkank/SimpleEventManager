@@ -15,6 +15,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\UrlInterface;
+use IDangerous\SimpleEventManager\Helper\Config;
 
 class Event extends AbstractModel
 {
@@ -46,11 +47,17 @@ class Event extends AbstractModel
     protected $_logger;
 
     /**
+     * @var Config
+     */
+    private $configHelper;
+
+    /**
      * @param Context $context
      * @param Registry $registry
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param StoreManagerInterface $storeManager
+     * @param Config|null $configHelper
      * @param array $data
      */
     public function __construct(
@@ -59,10 +66,12 @@ class Event extends AbstractModel
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
         StoreManagerInterface $storeManager = null,
+        Config $configHelper = null,
         array $data = []
     ) {
         parent::__construct($context, $registry, $resource, $resourceCollection, $data);
         $this->storeManager = $storeManager ?: ObjectManager::getInstance()->get(StoreManagerInterface::class);
+        $this->configHelper = $configHelper ?: ObjectManager::getInstance()->get(Config::class);
         $this->_logger = $context->getLogger();
     }
 
@@ -129,7 +138,7 @@ class Event extends AbstractModel
         }
 
         $mediaUrl = $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
-        return $mediaUrl . 'event/' . $image;
+        return $mediaUrl . 'event/preview/' . $image;
     }
 
     /**
@@ -152,16 +161,20 @@ class Event extends AbstractModel
 
         // Process preview image
         $previewImage = $this->getPreviewImage();
+        var_dump($previewImage);
+        var_dump(is_array($previewImage));
+
         if (is_array($previewImage)) {
-            if (isset($previewImage[0]['deleted']) && $previewImage[0]['deleted']) {
+          if (isset($previewImage[0]['deleted']) && $previewImage[0]['deleted']) {
                 // Image was marked for deletion
                 $this->setData('preview_image', null);
-            } elseif (!isset($previewImage[0]['name']) || (isset($previewImage[0]['error']) && $previewImage[0]['error'] > 0)) {
+            } elseif (!isset($previewImage[0]['name']) || (isset($previewImage[0]['error']) && $previewImage[0]['error'] != '0')) {
                 // No valid image data or upload error
                 if (empty($previewImage)) {
                     $this->setData('preview_image', null);
                 }
             } else {
+              die('ssf4343');
                 // New image uploaded
                 $imageName = $previewImage[0]['name'];
 
@@ -169,12 +182,14 @@ class Event extends AbstractModel
                 $imageName = $this->sanitizeFileName($imageName);
 
                 $this->setData('preview_image', $imageName);
+                if (isset($previewImage[0]['tmp_name']) && $previewImage[0]['tmp_name']) {
+                  $imageUploader->moveFileFromTmp($imageName);
+                }
 
+                var_dump($imgName);
+                exit;
                 // Move the image from temporary directory to the final location
                 try {
-                    if (isset($previewImage[0]['tmp_name']) && $previewImage[0]['tmp_name']) {
-                        $imageUploader->moveFileFromTmp($imageName);
-                    }
                 } catch (\Exception $e) {
                     // Log error but continue with save
                     $this->_logger->error('Error processing image: ' . $e->getMessage(), [
@@ -289,23 +304,56 @@ class Event extends AbstractModel
             $mediaDirectory = $filesystem->getDirectoryWrite(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
 
             $eventDir = 'event';
+            $previewDir = $eventDir . '/preview';
+            $photoDir = $eventDir . '/photo';
             $tmpDir = $eventDir . '/tmp';
 
-            // Create main event directory if it doesn't exist
-            if (!$mediaDirectory->isExist($eventDir)) {
-                $mediaDirectory->create($eventDir);
-                $mediaDirectory->changePermissions($eventDir, 0755);
+            $directories = [$eventDir, $previewDir, $photoDir, $tmpDir];
+
+            // Create all required directories with proper permissions
+            foreach ($directories as $dir) {
+                if (!$mediaDirectory->isExist($dir)) {
+                    $mediaDirectory->create($dir);
+                    $mediaDirectory->changePermissions($dir, 0777);
+                } else {
+                    // Ensure existing directory has proper permissions
+                    $mediaDirectory->changePermissions($dir, 0777);
+                }
             }
 
-            // Create temporary directory if it doesn't exist
-            if (!$mediaDirectory->isExist($tmpDir)) {
-                $mediaDirectory->create($tmpDir);
-                $mediaDirectory->changePermissions($tmpDir, 0755);
+            // Log the directory paths and permissions for debugging
+            $logger = ObjectManager::getInstance()->get(\Psr\Log\LoggerInterface::class);
+            $logger->info('Media directories for event images:', [
+                'event_dir' => $mediaDirectory->getAbsolutePath($eventDir) . ' - ' .
+                    substr(sprintf('%o', fileperms($mediaDirectory->getAbsolutePath($eventDir))), -4),
+                'preview_dir' => $mediaDirectory->getAbsolutePath($previewDir) . ' - ' .
+                    (file_exists($mediaDirectory->getAbsolutePath($previewDir)) ?
+                    substr(sprintf('%o', fileperms($mediaDirectory->getAbsolutePath($previewDir))), -4) : 'not exists'),
+                'photo_dir' => $mediaDirectory->getAbsolutePath($photoDir) . ' - ' .
+                    (file_exists($mediaDirectory->getAbsolutePath($photoDir)) ?
+                    substr(sprintf('%o', fileperms($mediaDirectory->getAbsolutePath($photoDir))), -4) : 'not exists'),
+                'tmp_dir' => $mediaDirectory->getAbsolutePath($tmpDir) . ' - ' .
+                    (file_exists($mediaDirectory->getAbsolutePath($tmpDir)) ?
+                    substr(sprintf('%o', fileperms($mediaDirectory->getAbsolutePath($tmpDir))), -4) : 'not exists')
+            ]);
+
+            // Double-check with native PHP to ensure directories exist and have proper permissions
+            $basePath = $mediaDirectory->getAbsolutePath();
+            foreach ($directories as $dir) {
+                $fullPath = $basePath . $dir;
+                if (!is_dir($fullPath)) {
+                    mkdir($fullPath, 0777, true);
+                } elseif (!is_writable($fullPath)) {
+                    chmod($fullPath, 0777);
+                }
             }
         } catch (\Exception $e) {
             // Log error but continue
             $logger = ObjectManager::getInstance()->get(\Psr\Log\LoggerInterface::class);
-            $logger->error('Error creating media directories: ' . $e->getMessage());
+            $logger->error('Error creating media directories: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
@@ -369,5 +417,25 @@ class Event extends AbstractModel
         }
 
         return null;
+    }
+
+    /**
+     * Get event detail URL
+     *
+     * @return string
+     */
+    public function getUrl()
+    {
+        if (!$this->getId()) {
+            return '';
+        }
+
+        $storeUrl = $this->storeManager->getStore()->getBaseUrl();
+
+        // Get configured slugs from the helper
+        $eventMasterSlug = $this->configHelper->getEventMasterSlug() ?: 'event';
+
+        // Construct URL in the format: /event-master-slug/view/id/123
+        return $storeUrl . $eventMasterSlug . '/view/id/' . $this->getId();
     }
 }

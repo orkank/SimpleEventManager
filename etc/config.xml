@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <simpleeventmanager>
+            <general>
+                <enabled>1</enabled>
+                <index_slug>events</index_slug>
+                <event_master_slug>event</event_master_slug>
+                <enable_calendar>1</enable_calendar>
+            </general>
+        </simpleeventmanager>
+    </default>
+</config>

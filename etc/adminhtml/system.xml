@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="idangerous" translate="label" sortOrder="300">
+            <label>IDangerous</label>
+        </tab>
+        <section id="simpleeventmanager" translate="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
+            <label>Simple Event Manager</label>
+            <tab>idangerous</tab>
+            <resource>IDangerous_SimpleEventManager::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Configuration</label>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Module</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable or disable the Simple Event Manager module</comment>
+                </field>
+                <field id="index_slug" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Events Index Slug</label>
+                    <comment>The URL slug for the events index page (e.g., "events", "etkinlikler")</comment>
+                </field>
+                <field id="event_master_slug" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Event Master Slug</label>
+                    <comment>The master slug for event view pages (e.g., "event", "etkinlik")</comment>
+                </field>
+                <field id="enable_calendar" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Calendar Widget</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Enable or disable the calendar widget on the events page</comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

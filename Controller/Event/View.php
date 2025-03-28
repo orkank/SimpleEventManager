@@ -10,7 +10,8 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
 use IDangerous\SimpleEventManager\Model\EventFactory;
 use Magento\Framework\Registry;
-use Magento\Framework\Exception\NoSuchEntityException;
+use IDangerous\SimpleEventManager\Helper\Config;
+use Magento\Framework\Controller\Result\ForwardFactory;
 
 class View extends Action
 {
@@ -30,34 +31,58 @@ class View extends Action
     protected $coreRegistry;
 
     /**
+     * @var Config
+     */
+    protected $config;
+
+    /**
+     * @var ForwardFactory
+     */
+    protected $resultForwardFactory;
+
+    /**
      * @param Context $context
      * @param PageFactory $resultPageFactory
      * @param EventFactory $eventFactory
      * @param Registry $coreRegistry
+     * @param Config $config
+     * @param ForwardFactory $resultForwardFactory
      */
     public function __construct(
         Context $context,
         PageFactory $resultPageFactory,
         EventFactory $eventFactory,
-        Registry $coreRegistry
+        Registry $coreRegistry,
+        Config $config,
+        ForwardFactory $resultForwardFactory
     ) {
         $this->resultPageFactory = $resultPageFactory;
         $this->eventFactory = $eventFactory;
         $this->coreRegistry = $coreRegistry;
+        $this->config = $config;
+        $this->resultForwardFactory = $resultForwardFactory;
         parent::__construct($context);
     }
 
     /**
      * Event view page
      *
-     * @return \Magento\Framework\View\Result\Page|\Magento\Framework\Controller\Result\Redirect
+     * @return \Magento\Framework\View\Result\Page|\Magento\Framework\Controller\Result\Redirect|\Magento\Framework\Controller\Result\Forward
      */
     public function execute()
     {
+        // Check if module is enabled
+        if (!$this->config->isEnabled()) {
+            // Forward to CMS/noroute
+            $resultForward = $this->resultForwardFactory->create();
+            return $resultForward->forward('noroute');
+        }
+
         $id = $this->getRequest()->getParam('id');
         if (!$id) {
             $resultRedirect = $this->resultRedirectFactory->create();
-            return $resultRedirect->setPath('*/*/');
+            $indexSlug = $this->config->getIndexSlug() ?: 'events';
+            return $resultRedirect->setPath($indexSlug);
         }
 
         $event = $this->eventFactory->create();
@@ -66,7 +91,8 @@ class View extends Action
         if (!$event->getId() || !$event->isActive()) {
             $this->messageManager->addErrorMessage(__('Event not found or not active.'));
             $resultRedirect = $this->resultRedirectFactory->create();
-            return $resultRedirect->setPath('*/*/');
+            $indexSlug = $this->config->getIndexSlug() ?: 'events';
+            return $resultRedirect->setPath($indexSlug);
         }
 
         $this->coreRegistry->register('current_event', $event);

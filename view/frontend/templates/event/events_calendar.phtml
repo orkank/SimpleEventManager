@@ -60,11 +60,42 @@
     </div>
 </div>
 
+<style>
+.past-events-header {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #e8e8e8;
+}
+
+.past-events-header h2 {
+    color: #666;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+}
+
+.past-events {
+    opacity: 0.8;
+}
+
+.past-event {
+    background-color: #f8f8f8;
+}
+
+.past-event .event-title a {
+    color: #666;
+}
+
+.past-event .event-description {
+    color: #888;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Translation strings
     const translations = {
         upcomingEvents: '<?= $block->escapeJs(__('Upcoming Events')) ?>',
+        pastEvents: '<?= $block->escapeJs(__('Past Events')) ?>',
         events: '<?= $block->escapeJs(__('Events')) ?>',
         noEventsForDay: '<?= $block->escapeJs(__('No events scheduled for this day.')) ?>',
         noUpcomingEvents: '<?= $block->escapeJs(__('No upcoming events scheduled.')) ?>',
@@ -144,25 +175,45 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedDateSubtitle.textContent = '';
         }
 
-        // Deduplicate events based on id, date, and name combination
+        // Deduplicate events and separate past/future events
         const uniqueEvents = [];
         const seenEvents = new Set();
+        const now = new Date();
+        const futureEvents = [];
+        const pastEvents = [];
+
+        // Set today's date to the beginning of the day for comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
         if (events && events.length > 0) {
             events.forEach(event => {
                 // Create a unique key for each event
                 const eventKey = `${event.id}-${event.date}-${event.name}-${event.start_time}`;
 
-                // Only add the event if we haven't seen it before
+                // Only process the event if we haven't seen it before
                 if (!seenEvents.has(eventKey)) {
                     seenEvents.add(eventKey);
-                    uniqueEvents.push(event);
+                    const eventDate = new Date(event.date);
+                    // Set event date to the beginning of the day for comparison
+                    eventDate.setHours(0, 0, 0, 0);
+
+                    // Include today's events in the upcoming events
+                    if (eventDate >= today) {
+                        futureEvents.push(event);
+                    } else {
+                        pastEvents.push(event);
+                    }
                 }
             });
         }
 
-        // If no events to display after deduplication
-        if (uniqueEvents.length === 0) {
+        // Sort events by date
+        futureEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+        pastEvents.sort((a, b) => new Date(b.date) - new Date(a.date)); // Past events in reverse chronological order
+
+        // If no events to display
+        if (futureEvents.length === 0 && pastEvents.length === 0) {
             const noEventsMsg = document.createElement('div');
             noEventsMsg.className = 'no-events-message';
             noEventsMsg.textContent = selectedDate
@@ -172,19 +223,94 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Group events by date
-        const eventsByDateGroup = {};
-        uniqueEvents.forEach(event => {
-            if (!eventsByDateGroup[event.date]) {
-                eventsByDateGroup[event.date] = [];
-            }
-            eventsByDateGroup[event.date].push(event);
-        });
+        // Display future events first
+        if (futureEvents.length > 0) {
+            const futureEventsContainer = document.createElement('div');
+            futureEventsContainer.className = 'future-events';
 
-        // Display events grouped by date
-        Object.keys(eventsByDateGroup).forEach(date => {
-            // Only show date header if we're displaying all events (not a single day)
-            if (!selectedDate) {
+            // Group future events by date
+            const futureEventsByDate = {};
+            futureEvents.forEach(event => {
+                if (!futureEventsByDate[event.date]) {
+                    futureEventsByDate[event.date] = [];
+                }
+                futureEventsByDate[event.date].push(event);
+            });
+
+            // Display future events grouped by date
+            Object.keys(futureEventsByDate).forEach(date => {
+                if (!selectedDate) {
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'event-date-header';
+
+                    const dateParts = date.split('-');
+                    const year = dateParts[0];
+                    const month = parseInt(dateParts[1]) - 1;
+                    const day = parseInt(dateParts[2]);
+
+                    dateHeader.innerHTML = `<div class="event-date-title">${month_names[month]} ${day}</div>`;
+                    futureEventsContainer.appendChild(dateHeader);
+                }
+
+                futureEventsByDate[date].forEach(event => {
+                    const eventElement = document.createElement('div');
+                    eventElement.className = 'event-item';
+
+                    let startTime = '';
+                    let endTime = '';
+
+                    if (event.start_time) {
+                        startTime = event.start_time.substring(0, 5);
+                    }
+
+                    if (event.end_time) {
+                        endTime = event.end_time.substring(0, 5);
+                    }
+
+                    const timeDisplay = (startTime && endTime)
+                        ? `<div class="event-time">${startTime} - ${endTime}</div>`
+                        : '';
+
+                    eventElement.innerHTML = `
+                        <div class="event-content">
+                            <div class="event-time-column">
+                                ${timeDisplay}
+                            </div>
+                            <div class="event-details">
+                                <div class="event-title"><a href="${event.url}">${event.name}</a></div>
+                                <div class="event-description">${event.description || translations.defaultDescription}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    futureEventsContainer.appendChild(eventElement);
+                });
+            });
+
+            eventsListContainer.appendChild(futureEventsContainer);
+        }
+
+        // Display past events if any
+        if (pastEvents.length > 0 && !selectedDate) {
+            const pastEventsHeader = document.createElement('div');
+            pastEventsHeader.className = 'past-events-header';
+            pastEventsHeader.innerHTML = `<h2>${translations.pastEvents}</h2>`;
+            eventsListContainer.appendChild(pastEventsHeader);
+
+            const pastEventsContainer = document.createElement('div');
+            pastEventsContainer.className = 'past-events';
+
+            // Group past events by date
+            const pastEventsByDate = {};
+            pastEvents.forEach(event => {
+                if (!pastEventsByDate[event.date]) {
+                    pastEventsByDate[event.date] = [];
+                }
+                pastEventsByDate[event.date].push(event);
+            });
+
+            // Display past events grouped by date
+            Object.keys(pastEventsByDate).sort().reverse().forEach(date => {
                 const dateHeader = document.createElement('div');
                 dateHeader.className = 'event-date-header';
 
@@ -194,45 +320,45 @@ document.addEventListener('DOMContentLoaded', function() {
                 const day = parseInt(dateParts[2]);
 
                 dateHeader.innerHTML = `<div class="event-date-title">${month_names[month]} ${day}</div>`;
-                eventsListContainer.appendChild(dateHeader);
-            }
+                pastEventsContainer.appendChild(dateHeader);
 
-            // Add all events for this date
-            eventsByDateGroup[date].forEach(event => {
-                const eventElement = document.createElement('div');
-                eventElement.className = 'event-item';
+                pastEventsByDate[date].forEach(event => {
+                    const eventElement = document.createElement('div');
+                    eventElement.className = 'event-item past-event';
 
-                // Extract time if available (assuming format like "08:00:00" or similar)
-                let startTime = '';
-                let endTime = '';
+                    let startTime = '';
+                    let endTime = '';
 
-                if (event.start_time) {
-                    startTime = event.start_time.substring(0, 5);
-                }
+                    if (event.start_time) {
+                        startTime = event.start_time.substring(0, 5);
+                    }
 
-                if (event.end_time) {
-                    endTime = event.end_time.substring(0, 5);
-                }
+                    if (event.end_time) {
+                        endTime = event.end_time.substring(0, 5);
+                    }
 
-                const timeDisplay = (startTime && endTime)
-                    ? `<div class="event-time">${startTime} - ${endTime}</div>`
-                    : '';
+                    const timeDisplay = (startTime && endTime)
+                        ? `<div class="event-time">${startTime} - ${endTime}</div>`
+                        : '';
 
-                eventElement.innerHTML = `
-                    <div class="event-content">
-                        <div class="event-time-column">
-                            ${timeDisplay}
+                    eventElement.innerHTML = `
+                        <div class="event-content">
+                            <div class="event-time-column">
+                                ${timeDisplay}
+                            </div>
+                            <div class="event-details">
+                                <div class="event-title"><a href="${event.url}">${event.name}</a></div>
+                                <div class="event-description">${event.description || translations.defaultDescription}</div>
+                            </div>
                         </div>
-                        <div class="event-details">
-                            <div class="event-title"><a href="${event.url}">${event.name}</a></div>
-                            <div class="event-description">${event.description || translations.defaultDescription}</div>
-                        </div>
-                    </div>
-                `;
+                    `;
 
-                eventsListContainer.appendChild(eventElement);
+                    pastEventsContainer.appendChild(eventElement);
+                });
             });
-        });
+
+            eventsListContainer.appendChild(pastEventsContainer);
+        }
     }
 
     // Initialize with latest events (limit 10)

@@ -75,6 +75,9 @@ class DataProvider extends AbstractDataProvider
             $data = $event->getData();
             $mediaUrl = $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
 
+            // Add unique form submission key
+            $data['form_submission_key'] = uniqid('form_', true);
+
             // Handle preview image
             if (isset($data['preview_image']) && $data['preview_image']) {
                 $imageUrl = $mediaUrl . 'event/' . $data['preview_image'];
@@ -114,8 +117,20 @@ class DataProvider extends AbstractDataProvider
         if (!empty($data)) {
             $event = $this->collection->getNewEmptyItem();
             $event->setData($data);
+            // Add unique form submission key if not already present
+            if (!isset($data['form_submission_key'])) {
+                $event->setData('form_submission_key', uniqid('form_', true));
+            }
             $this->loadedData[$event->getId()] = $event->getData();
             $this->dataPersistor->clear('idangerous_event');
+        }
+
+        // For new form with no loaded data
+        if (empty($this->loadedData)) {
+            $emptyData = [
+                'form_submission_key' => uniqid('form_', true)
+            ];
+            $this->loadedData[''] = $emptyData;
         }
 
         return $this->loadedData;

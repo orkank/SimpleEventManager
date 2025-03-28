@@ -55,6 +55,18 @@
                 </item>
             </argument>
         </field>
+        <field name="form_submission_key">
+            <argument name="data" xsi:type="array">
+                <item name="config" xsi:type="array">
+                    <item name="visible" xsi:type="boolean">false</item>
+                    <item name="dataType" xsi:type="string">text</item>
+                    <item name="formElement" xsi:type="string">input</item>
+                    <item name="source" xsi:type="string">event</item>
+                    <item name="dataScope" xsi:type="string">form_submission_key</item>
+                    <item name="default" xsi:type="string">${Date.now()}</item>
+                </item>
+            </argument>
+        </field>
         <field name="name">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">

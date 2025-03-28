@@ -15,11 +15,11 @@
     </type>
     <preference for="IDangerous\SimpleEventManager\Api\Data\EventInterface" type="IDangerous\SimpleEventManager\Model\Event" />
 
-    <!-- Image Uploader Configuration -->
+    <!-- Main Image Uploader Configuration -->
     <virtualType name="IDangerous\SimpleEventManager\EventImageUploader" type="Magento\Catalog\Model\ImageUploader">
         <arguments>
             <argument name="baseTmpPath" xsi:type="string">event/tmp</argument>
-            <argument name="basePath" xsi:type="string">event</argument>
+            <argument name="basePath" xsi:type="string">event/preview</argument>
             <argument name="allowedExtensions" xsi:type="array">
                 <item name="jpg" xsi:type="string">jpg</item>
                 <item name="jpeg" xsi:type="string">jpeg</item>
@@ -39,6 +39,20 @@
     <type name="IDangerous\SimpleEventManager\Controller\Adminhtml\Event\Image\Upload">
         <arguments>
             <argument name="imageUploader" xsi:type="object">IDangerous\SimpleEventManager\EventImageUploader</argument>
+            <argument name="fileIo" xsi:type="object">Magento\Framework\Filesystem\Io\File</argument>
+            <argument name="uploaderFactory" xsi:type="object">Magento\MediaStorage\Model\File\UploaderFactory</argument>
         </arguments>
+    </type>
+
+    <type name="IDangerous\SimpleEventManager\Controller\Adminhtml\Event\Save">
+        <arguments>
+            <argument name="eventFactory" xsi:type="object">IDangerous\SimpleEventManager\Model\EventFactory</argument>
+            <argument name="dataPersistor" xsi:type="object">Magento\Framework\App\Request\DataPersistorInterface</argument>
+            <argument name="eventCollectionFactory" xsi:type="object">IDangerous\SimpleEventManager\Model\ResourceModel\Event\CollectionFactory</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Framework\App\Router\Base">
+        <plugin name="idangerous_simpleeventmanager_custom_route" type="IDangerous\SimpleEventManager\Plugin\Router\CustomRouteSlug" sortOrder="10" />
     </type>
 </config>

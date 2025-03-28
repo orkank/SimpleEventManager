@@ -66,16 +66,6 @@ mkdir -p pub/media/idangerous/event/photo
 chmod -R 777 pub/media/idangerous
 ```
 
-### Using Composer
-```bash
-composer require idangerous/module-simple-event-manager
-bin/magento module:enable IDangerous_SimpleEventManager
-bin/magento setup:upgrade
-bin/magento setup:di:compile
-bin/magento setup:static-content:deploy -f
-bin/magento cache:clean
-```
-
 ## Usage
 
 ### Admin
