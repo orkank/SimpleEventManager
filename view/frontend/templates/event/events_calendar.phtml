@@ -291,11 +291,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Display past events if any
-        if (pastEvents.length > 0 && !selectedDate) {
-            const pastEventsHeader = document.createElement('div');
-            pastEventsHeader.className = 'past-events-header';
-            pastEventsHeader.innerHTML = `<h2>${translations.pastEvents}</h2>`;
-            eventsListContainer.appendChild(pastEventsHeader);
+        if (pastEvents.length > 0) {
+            // Only show past events header when not selecting a specific date
+            if (!selectedDate) {
+                const pastEventsHeader = document.createElement('div');
+                pastEventsHeader.className = 'past-events-header';
+                pastEventsHeader.innerHTML = `<h2>${translations.pastEvents}</h2>`;
+                eventsListContainer.appendChild(pastEventsHeader);
+            }
 
             const pastEventsContainer = document.createElement('div');
             pastEventsContainer.className = 'past-events';
@@ -311,16 +314,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Display past events grouped by date
             Object.keys(pastEventsByDate).sort().reverse().forEach(date => {
-                const dateHeader = document.createElement('div');
-                dateHeader.className = 'event-date-header';
+                // Only show date header when not selecting a specific date
+                if (!selectedDate) {
+                    const dateHeader = document.createElement('div');
+                    dateHeader.className = 'event-date-header';
 
-                const dateParts = date.split('-');
-                const year = dateParts[0];
-                const month = parseInt(dateParts[1]) - 1;
-                const day = parseInt(dateParts[2]);
+                    const dateParts = date.split('-');
+                    const year = dateParts[0];
+                    const month = parseInt(dateParts[1]) - 1;
+                    const day = parseInt(dateParts[2]);
 
-                dateHeader.innerHTML = `<div class="event-date-title">${month_names[month]} ${day}</div>`;
-                pastEventsContainer.appendChild(dateHeader);
+                    dateHeader.innerHTML = `<div class="event-date-title">${month_names[month]} ${day}</div>`;
+                    pastEventsContainer.appendChild(dateHeader);
+                }
 
                 pastEventsByDate[date].forEach(event => {
                     const eventElement = document.createElement('div');
