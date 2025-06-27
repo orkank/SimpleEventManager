@@ -91,113 +91,154 @@ class EventCustomCalendar extends EventCalendar
      */
     public function getEventsForCalendar()
     {
-        $events = $this->getEvents();
-        $result = [];
-        $addedEvents = []; // To track already added events and prevent duplicates
+        try {
+            $events = $this->getEvents();
+            $result = [];
+            $addedEvents = []; // To track already added events and prevent duplicates
 
-        // Debug information
-        $debug = [
-            'collection_size' => $events ? $events->getSize() : 0,
-            'collection_sql' => $events ? $events->getSelect()->__toString() : 'No collection',
-        ];
-
-        // Check if events exist
-        if ($events && (is_array($events) || is_object($events))) {
-            foreach ($events as $event) {
-                $date = $event->getEventDate();
-                if ($date) {
-                    $dateObj = new \DateTime($date);
-                    $formattedDate = $dateObj->format('Y-m-d');
-
-                    // Get time values if they exist
-                    $startTime = $event->getStartTime() ?: "08:00:00"; // Default time if not set
-                    $endTime = $event->getEndTime() ?: "09:30:00"; // Default time if not set
-
-                    // Get short description first, fall back to description, or provide a placeholder
-                    $shortDescription = $event->getShortDescription() ?: '';
-
-                    // If no short description, use a portion of the regular description
-                    if (empty($shortDescription) && $event->getDescription()) {
-                        $shortDescription = $event->getDescription();
-                    }
-
-                    // Truncate description if too long
-                    if (strlen($shortDescription) > 150) {
-                        $shortDescription = substr($shortDescription, 0, 147) . '...';
-                    }
-
-                    // Create a unique identifier for this event
-                    $eventKey = $event->getId() . '-' . $formattedDate . '-' . $event->getName() . '-' . $startTime;
-
-                    // Only add this event if it hasn't been added before
-                    if (!isset($addedEvents[$eventKey])) {
-                        $addedEvents[$eventKey] = true; // Mark as added
-
-                        $result[] = [
-                            'date' => $formattedDate,
-                            'name' => $event->getName(),
-                            'url' => $this->getUrl('events/event/view', ['id' => $event->getId()]),
-                            'id' => $event->getId(),
-                            'publish_date' => $event->getPublishDate(),
-                            'start_time' => $startTime,
-                            'end_time' => $endTime,
-                            'description' => $shortDescription
-                        ];
-                    }
-                }
-            }
-        }
-
-        // If no results found but we're in development mode, add test data
-        if (empty($result)) {
-            // Add some dummy events for testing
-            $today = new \DateTime();
-            $tomorrow = new \DateTime('+1 day');
-            $nextWeek = new \DateTime('+7 days');
-
-            // Add test events but ensure no duplicates
-            $testEvents = [
-                [
-                    'date' => $tomorrow->format('Y-m-d'),
-                    'name' => __('Important Conference'),
-                    'url' => '#',
-                    'id' => 'test2',
-                    'start_time' => '10:00:00',
-                    'end_time' => '12:30:00',
-                    'description' => __('Lorem ipsum dolor sit amet consectetur')
-                ],
-                [
-                    'date' => $nextWeek->format('Y-m-d'),
-                    'name' => __('Workshop'),
-                    'url' => '#',
-                    'id' => 'test3',
-                    'start_time' => '13:00:00',
-                    'end_time' => '15:30:00',
-                    'description' => __('Lorem ipsum dolor sit amet consectetur')
-                ],
-                [
-                    'date' => $today->format('Y-m-d'),
-                    'name' => __('Afternoon Session'),
-                    'url' => '#',
-                    'id' => 'test4',
-                    'start_time' => '14:00:00',
-                    'end_time' => '16:30:00',
-                    'description' => __('Lorem ipsum dolor sit amet consectetur')
-                ]
+            // Debug information
+            $debug = [
+                'collection_size' => $events ? $events->getSize() : 0,
+                'collection_sql' => $events ? $events->getSelect()->__toString() : 'No collection',
             ];
 
-            foreach ($testEvents as $event) {
-                $eventKey = $event['id'] . '-' . $event['date'] . '-' . $event['name'] . '-' . $event['start_time'];
+            // Add debug log to see what's happening
+            error_log('EventCustomCalendar Debug: Collection size = ' . $debug['collection_size']);
+            error_log('EventCustomCalendar Debug: SQL = ' . $debug['collection_sql']);
 
-                // Only add if not a duplicate
-                if (!isset($addedEvents[$eventKey])) {
-                    $addedEvents[$eventKey] = true;
-                    $result[] = $event;
+            // Check if events exist
+            if ($events && (is_array($events) || is_object($events))) {
+                error_log('EventCustomCalendar Debug: Processing events...');
+                foreach ($events as $event) {
+                    error_log('EventCustomCalendar Debug: Event ID = ' . $event->getId() . ', Name = ' . $event->getName());
+                    $date = $event->getEventDate();
+                    if ($date) {
+                        $dateObj = new \DateTime($date);
+                        $formattedDate = $dateObj->format('Y-m-d');
+                        error_log('EventCustomCalendar Debug: Event date = ' . $formattedDate);
+
+                        // Get time values if they exist - try different methods
+                        $startTime = null;
+                        $endTime = null;
+
+                        // Try to get time from different possible fields
+                        if (method_exists($event, 'getStartTime')) {
+                            $startTime = $event->getStartTime();
+                        }
+                        if (method_exists($event, 'getEndTime')) {
+                            $endTime = $event->getEndTime();
+                        }
+
+                        // Fall back to defaults if no time fields exist
+                        $startTime = $startTime ?: "08:00:00";
+                        $endTime = $endTime ?: "09:30:00";
+
+                        // Get short description first, fall back to description, or provide a placeholder
+                        $shortDescription = '';
+                        if (method_exists($event, 'getShortDescription')) {
+                            $shortDescription = $event->getShortDescription() ?: '';
+                        }
+
+                        // If no short description, use a portion of the regular description
+                        if (empty($shortDescription) && method_exists($event, 'getDescription')) {
+                            $shortDescription = $event->getDescription();
+                        }
+
+                        // Use content field if description is not available
+                        if (empty($shortDescription) && method_exists($event, 'getContent')) {
+                            $shortDescription = $event->getContent();
+                        }
+
+                        // Truncate description if too long
+                        if (strlen($shortDescription) > 150) {
+                            $shortDescription = substr($shortDescription, 0, 147) . '...';
+                        }
+
+                        // Create a unique identifier for this event
+                        $eventKey = $event->getId() . '-' . $formattedDate . '-' . $event->getName() . '-' . $startTime;
+
+                        // Only add this event if it hasn't been added before
+                        if (!isset($addedEvents[$eventKey])) {
+                            $addedEvents[$eventKey] = true; // Mark as added
+
+                            $eventData = [
+                                'date' => $formattedDate,
+                                'name' => $event->getName(),
+                                'url' => $this->getUrl('events/event/view', ['id' => $event->getId()]),
+                                'id' => $event->getId(),
+                                'publish_date' => $event->getPublishDate(),
+                                'start_time' => $startTime,
+                                'end_time' => $endTime,
+                                'description' => $shortDescription
+                            ];
+
+                            $result[] = $eventData;
+                            error_log('EventCustomCalendar Debug: Added event to result: ' . json_encode($eventData));
+                        }
+                    } else {
+                        error_log('EventCustomCalendar Debug: Event has no date - ID = ' . $event->getId());
+                    }
                 }
+            } else {
+                error_log('EventCustomCalendar Debug: No events found or events is not iterable');
             }
-        }
 
-        return json_encode($result);
+        // If no results found but we're in development mode, add test data
+        // if (empty($result)) {
+        //     // Add some dummy events for testing
+        //     $today = new \DateTime();
+        //     $tomorrow = new \DateTime('+1 day');
+        //     $nextWeek = new \DateTime('+7 days');
+
+        //     // Add test events but ensure no duplicates
+        //     $testEvents = [
+        //         [
+        //             'date' => $tomorrow->format('Y-m-d'),
+        //             'name' => __('Important Conference'),
+        //             'url' => '#',
+        //             'id' => 'test2',
+        //             'start_time' => '10:00:00',
+        //             'end_time' => '12:30:00',
+        //             'description' => __('Lorem ipsum dolor sit amet consectetur')
+        //         ],
+        //         [
+        //             'date' => $nextWeek->format('Y-m-d'),
+        //             'name' => __('Workshop'),
+        //             'url' => '#',
+        //             'id' => 'test3',
+        //             'start_time' => '13:00:00',
+        //             'end_time' => '15:30:00',
+        //             'description' => __('Lorem ipsum dolor sit amet consectetur')
+        //         ],
+        //         [
+        //             'date' => $today->format('Y-m-d'),
+        //             'name' => __('Afternoon Session'),
+        //             'url' => '#',
+        //             'id' => 'test4',
+        //             'start_time' => '14:00:00',
+        //             'end_time' => '16:30:00',
+        //             'description' => __('Lorem ipsum dolor sit amet consectetur')
+        //         ]
+        //     ];
+
+        //     foreach ($testEvents as $event) {
+        //         $eventKey = $event['id'] . '-' . $event['date'] . '-' . $event['name'] . '-' . $event['start_time'];
+
+        //         // Only add if not a duplicate
+        //         if (!isset($addedEvents[$eventKey])) {
+        //             $addedEvents[$eventKey] = true;
+        //             $result[] = $event;
+        //         }
+        //     }
+        // }
+
+            error_log('EventCustomCalendar Debug: Final result count = ' . count($result));
+            return json_encode($result);
+        } catch (\Exception $e) {
+            // Log error and return empty array
+            error_log('Error getting events for calendar: ' . $e->getMessage());
+            return json_encode([]);
+        }
     }
 
     /**

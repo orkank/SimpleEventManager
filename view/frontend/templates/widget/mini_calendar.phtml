@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let miniCalendar = document.querySelector('#' + calendarId);
 
     // Get events data from PHP block
-    const eventsData = <?= /* @noEscape */ $block->getEventsForCalendar() ?>;
+    const eventsData = <?= /* @noEscape */ $block->getEventsForCalendar() ?: '[]' ?>;
 
     // Create events map by date for easy lookup
     const eventsByDate = {};
