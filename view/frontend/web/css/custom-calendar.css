@@ -931,8 +931,8 @@
 }
 
 .event-time-column {
-  flex: 0 0 120px;
-  border-right: 1px solid #f0f0f0;
+  flex: 0 0 50px;
+  border-right  : 1px solid #f0f0f0;
   padding-right: 15px;
   display: flex;
   align-items: center;

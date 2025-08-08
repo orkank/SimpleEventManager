@@ -117,21 +117,9 @@ class EventCustomCalendar extends EventCalendar
                         $formattedDate = $dateObj->format('Y-m-d');
                         error_log('EventCustomCalendar Debug: Event date = ' . $formattedDate);
 
-                        // Get time values if they exist - try different methods
-                        $startTime = null;
-                        $endTime = null;
-
-                        // Try to get time from different possible fields
-                        if (method_exists($event, 'getStartTime')) {
-                            $startTime = $event->getStartTime();
-                        }
-                        if (method_exists($event, 'getEndTime')) {
-                            $endTime = $event->getEndTime();
-                        }
-
-                        // Fall back to defaults if no time fields exist
-                        $startTime = $startTime ?: "08:00:00";
-                        $endTime = $endTime ?: "09:30:00";
+                        // Extract time from event_date
+                        $startTime = $dateObj->format('H:i:s');
+                        $endTime = null; // We only have one time point, not a duration
 
                         // Get short description first, fall back to description, or provide a placeholder
                         $shortDescription = '';

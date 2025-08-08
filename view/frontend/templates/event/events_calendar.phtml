@@ -257,25 +257,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     eventElement.className = 'event-item';
 
                     let startTime = '';
-                    let endTime = '';
 
                     if (event.start_time) {
                         startTime = event.start_time.substring(0, 5);
                     }
 
-                    if (event.end_time) {
-                        endTime = event.end_time.substring(0, 5);
-                    }
-
-                    const timeDisplay = (startTime && endTime)
-                        ? `<div class="event-time">${startTime} - ${endTime}</div>`
+                    const timeDisplay = (startTime)
+                        ? `<div class="event-time-column"><div class="event-time">${startTime}</div></div>`
                         : '';
 
                     eventElement.innerHTML = `
                         <div class="event-content">
-                            <div class="event-time-column">
-                                ${timeDisplay}
-                            </div>
+                            ${timeDisplay}
                             <div class="event-details">
                                 <div class="event-title"><a href="${event.url}">${event.name}</a></div>
                                 <div class="event-description">${event.description || translations.defaultDescription}</div>
@@ -344,14 +337,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     const timeDisplay = (startTime && endTime)
-                        ? `<div class="event-time">${startTime} - ${endTime}</div>`
+                        ? `<div class="event-time-column"><div class="event-time">${startTime} - ${endTime}</div></div>`
                         : '';
 
                     eventElement.innerHTML = `
                         <div class="event-content">
-                            <div class="event-time-column">
-                                ${timeDisplay}
-                            </div>
+                              ${timeDisplay}
                             <div class="event-details">
                                 <div class="event-title"><a href="${event.url}">${event.name}</a></div>
                                 <div class="event-description">${event.description || translations.defaultDescription}</div>
